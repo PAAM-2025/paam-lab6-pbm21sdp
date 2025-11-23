@@ -1,6 +1,7 @@
 package upt.paam.lab6
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.location.Location
 import com.google.android.gms.location.LocationCallback
@@ -9,20 +10,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.tasks.OnFailureListener
-import android.provider.Settings
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -77,7 +73,16 @@ class MainActivity : ComponentActivity() {
                     ) {
                         LocationComposable()
                     }
-                    // TODO 2: Add a button to call getCurrentLocation for retrieving current location
+                    Row(
+                        Modifier
+                            .weight(2f)
+                            .align(Alignment.CenterHorizontally)
+                            .padding(16.dp)
+                    ) {
+                        Button(onClick = { getCurrentLocation() }) {
+                            Text("Get Current Location")
+                        }
+                    }
                 }
 
             }
@@ -113,7 +118,6 @@ class MainActivity : ComponentActivity() {
                 title = "One Marker"
             )
         }
-        // TODO 1: Create a marker and set its position from [latLngState].
     }
 
     override fun onResume() {
@@ -135,20 +139,16 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @SuppressLint("MissingPermission")
     private fun getCurrentLocation() {
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         if (isLocationPermissionGranted) {
-            if (ActivityCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                return
-            }
-            // TODO 3 Add a fusedLocationClient function to retrieve the current location and set the marker to point to that location
+            fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, CancellationTokenSource().token)
+                .addOnSuccessListener { location: Location? ->
+                    if (location != null) {
+                        latLngState.value = LatLng(location.latitude, location.longitude)
+                    }
+                }
         }
     }
 
@@ -169,4 +169,3 @@ class MainActivity : ComponentActivity() {
     }
 
 }
-
